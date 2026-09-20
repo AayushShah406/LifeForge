@@ -1,0 +1,11 @@
+[
+  {
+    "id": "tc_study_langgraph_30days",
+    "prompt": "Create a 30-day plan for learning LangGraph and stateful agent systems.",
+    "expected_intent": "study_planning",
+    "expected_agents": ["research", "planning", "verification"],
+    "expected_tools": ["web_search", "calendar_availability", "task_create"],
+    "expected_sensitive_actions": ["calendar_create_event"],
+    "target_score": 0.90
+  }
+]

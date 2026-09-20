@@ -1,0 +1,11 @@
+[
+  {
+    "id": "tc_doc_resume_jd_matching",
+    "prompt": "How well does my resume match this job description for Staff AI Architect?",
+    "expected_intent": "document_intelligence",
+    "expected_agents": ["document", "interview", "verification"],
+    "expected_tools": ["document_search"],
+    "expected_sensitive_actions": [],
+    "target_score": 0.92
+  }
+]

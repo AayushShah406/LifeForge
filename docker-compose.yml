@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Structured State, Users, Workflows & Traces
+  postgres:
+    image: postgres:16-alpine
+    container_name: lifeforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-lifeforge}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lifeforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Background Tasks, SSE Event PubSub & LangGraph Checkpointer
+  redis:
+    image: redis:7-alpine
+    container_name: lifeforge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend Service (LangGraph, Gemini 3 Router, RAG, Agents)
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: lifeforge-api
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - PORT=8000
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/lifeforge
+      - DATABASE_URL_SYNC=postgresql://postgres:postgres@postgres:5432/lifeforge
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_REASONING_MODEL=${GEMINI_REASONING_MODEL:-gemini-3.1-pro-preview}
+      - GEMINI_FAST_MODEL=${GEMINI_FAST_MODEL:-gemini-3.8-flash}
+      - GEMINI_LITE_MODEL=${GEMINI_LITE_MODEL:-gemini-3.1-flash-lite}
+      - GEMINI_EMBEDDING_MODEL=${GEMINI_EMBEDDING_MODEL:-gemini-embedding-001}
+      - WEAVIATE_URL=${WEAVIATE_URL}
+      - WEAVIATE_API_KEY=${WEAVIATE_API_KEY}
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-true}
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-lifeforge-production}
+      - JWT_SECRET=${JWT_SECRET:-lifeforge-jwt-secret-key-32bytes-long-super-safe}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+
+  # MCP (Model Context Protocol) Server
+  mcp:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.mcp
+    container_name: lifeforge-mcp
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MCP_PORT=8080
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - api
+
+  # Next.js 15 AI-Native Frontend Dashboard
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    container_name: lifeforge-web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:

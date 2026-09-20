@@ -1,0 +1,20 @@
+[
+  {
+    "id": "tc_interview_google",
+    "prompt": "Prepare me for my interview next Thursday at Google for Senior AI Systems Engineer.",
+    "expected_intent": "interview_preparation",
+    "expected_agents": ["research", "document", "interview", "planning"],
+    "expected_tools": ["web_search", "document_search", "calendar_availability"],
+    "expected_sensitive_actions": ["calendar_create_event"],
+    "target_score": 0.90
+  },
+  {
+    "id": "tc_interview_mock_session",
+    "prompt": "Conduct a mock interview on LangGraph state machines and distributed inference bottlenecks.",
+    "expected_intent": "interview_preparation",
+    "expected_agents": ["interview", "verification"],
+    "expected_tools": ["web_search"],
+    "expected_sensitive_actions": [],
+    "target_score": 0.88
+  }
+]

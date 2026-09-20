@@ -1,0 +1,42 @@
+{
+  "family": "lifeforge-production",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "containerDefinitions": [
+    {
+      "name": "lifeforge-api",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/lifeforge-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "APP_ENV", "value": "production" },
+        { "name": "GEMINI_REASONING_MODEL", "value": "gemini-3.1-pro-preview" },
+        { "name": "GEMINI_FAST_MODEL", "value": "gemini-3.8-flash" },
+        { "name": "GEMINI_LITE_MODEL", "value": "gemini-3.1-flash-lite" },
+        { "name": "GEMINI_EMBEDDING_MODEL", "value": "gemini-embedding-001" }
+      ],
+      "secrets": [
+        { "name": "GEMINI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lifeforge/gemini-api-key" },
+        { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lifeforge/database-url" },
+        { "name": "WEAVIATE_URL", "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lifeforge/weaviate-url" },
+        { "name": "WEAVIATE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lifeforge/weaviate-api-key" },
+        { "name": "LANGSMITH_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:lifeforge/langsmith-api-key" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lifeforge-production",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "api"
+        }
+      }
+    }
+  ]
+}

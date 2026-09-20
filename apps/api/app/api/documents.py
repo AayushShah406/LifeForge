@@ -1,0 +1,4 @@
+"""Backward compatibility re-export for documents router."""
+from app.api.routes.documents import router
+
+__all__ = ["router"]
