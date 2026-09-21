@@ -143,17 +143,19 @@ class WorkflowService:
 
                         # Persist approval objects
                         for apprv in event.get("pending_approvals", []):
-                            apprv_id = apprv.get("id") or str(uuid.uuid4())
+                            apprv_dict = apprv if isinstance(apprv, dict) else (apprv.model_dump() if hasattr(apprv, "model_dump") else {})
+                            apprv_id = apprv_dict.get("id") or str(uuid.uuid4())
                             existing = await session.execute(
                                 select(Approval).where(Approval.id == apprv_id)
                             )
                             if not existing.scalar_one_or_none():
                                 approval_row = Approval(
                                     id=apprv_id,
+                                    user_id=user_id,
                                     workflow_id=workflow_id,
-                                    step_id=event.get("current_step"),
-                                    action_name=apprv.get("action", "unknown_action"),
-                                    action_payload=_make_json_safe(apprv.get("parameters", {})),
+                                    action_type=apprv_dict.get("action", "unknown_action"),
+                                    description=apprv_dict.get("reason", "Approval required for workflow action."),
+                                    payload=_make_json_safe(apprv_dict.get("parameters", {})),
                                     status="pending"
                                 )
                                 session.add(approval_row)
@@ -368,9 +370,7 @@ class WorkflowService:
                 else:
                     existing_step.status = step_status
                     if s_out is not None:
-                        existing_step.output_data = s_out
-                    if s_verif is not None:
-                        existing_step.verification_status = s_verif
+                        existing_step.output = _make_json_safe(s_out)  # real column name
 
             await session.commit()
 

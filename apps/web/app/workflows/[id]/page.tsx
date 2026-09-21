@@ -21,7 +21,7 @@ import { workflowsApi, StreamEvent } from "@/lib/api/workflows";
 import { approvalsApi } from "@/lib/api/approvals";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { AgentGraphVisualizer } from "@/components/AgentGraphVisualizer";
-import { ApprovalModal } from "@/components/ui/ApprovalModal";
+import { ApprovalModal } from "@/components/ApprovalModal";
 
 export default function WorkflowWorkspacePage() {
   const { id } = useParams() as { id: string };
